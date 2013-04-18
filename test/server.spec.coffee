@@ -1,16 +1,22 @@
 q = require('../lib/q-server')
 
-request = require('supertest')
+fs = require('fs')
+supertest = require('supertest')
 express = require('express')
+wrench = require('wrench')
 
 {expect} = require('./testing')
 
 describe 'starting it', ->
 
     s = null
+    TEST_OPTIONS=
+        store: "#{__dirname}/store"
 
     beforeEach ()->
-        s = q()
+        s = q(TEST_OPTIONS)
+        wrench.rmdirSyncRecursive TEST_OPTIONS.store if fs.existsSync TEST_OPTIONS.store
+       
 
     it 'can be built', ->
         expect(s).to.not.be.undefined
@@ -23,16 +29,64 @@ describe 'starting it', ->
     describe 'with express', ->
 
         app = null
+        request = null
 
         beforeEach ->
             app = express()
+            app.use(express.bodyParser())
+            app.use(express.methodOverride())
+
             s.listen(app)
 
-        it 'can get list of packages as json', (done)->
-            request(app)
-                .get('/packages')
-                .expect('Content-Type', /json/)
-                .expect(200, done)
+            request = supertest(app)
+        
+        describe 'reading information', ->
+
+            it 'can get list of packages as json', (done)->
+                request.get('/packages')
+                    .expect('Content-Type', /json/)
+                    .expect(200, done)
+
+        describe 'uploading packages', ->
+
+            it 'accepts new packages by uploading them', (done)->
+                request.post('/packages')
+                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
+                    .expect(202,done)
+
+            it 'posts without packages are not accepted', (done)->
+                request.post('/packages')
+                    .expect(400,done)
+
+            it 'invalid packages are not accepted', (done)->
+                request.post('/packages')
+                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/manipulated.zip")
+                    .expect(400,done)
+
+        describe 'once packages are uploaded', ->
+
+            beforeEach (done)->
+                request.post('/packages')
+                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
+                    .end(done)
+
+            it 'stores them in the storage path as defined via the options ', ->
+                  request.get('/packages')
+                    .end ->
+                        firstDirName = 'b7'
+                        filename = 'b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg'
+
+                        expectedPath = path.join(TEST_OPTIONS.store,firstDirName,filename)
+                        fs.existsSync(expectedPath).should.be.true
+
+
+            it.skip 'is possible to list them again', ->
+                  request.get('/packages')
+                    .expect('Content-Type', /json/)
+                    .expect(200)
+                    .end (err,res)->
+                        expect(err).to.be.null
+                        expect( res.body.raw.b74ed98ef279f61233bad0d4b34c1488f8525f27 ).to.not.be.undefined
 
 
 

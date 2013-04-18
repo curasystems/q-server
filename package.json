@@ -23,7 +23,9 @@
     "optimist": "~0.3.5",
     "coffee-script": "git://github.com/curasystems/coffee-script.git#source_maps",
     "source-map-support": "git://github.com/curasystems/node-source-map-support.git",
-    "commander": "~1.1.1"
+    "commander": "~1.1.1",
+    "async": "~0.2.7",
+    "underscore": "~1.4.4"
   },
   "devDependencies": {
     "sinon": "~1.6.0",
@@ -33,7 +35,9 @@
     "async": "~0.2.6",
     "growl": "~1.7.0",
     "supertest": "~0.6.0",
-    "express": "~3.2.0"
+    "express": "~3.2.0",
+    "wrench": "~1.4.4",
+    "mkdirp": "~0.3.5"
   },
   "author": "Matthias Goetzke",
   "license": "BSD",
