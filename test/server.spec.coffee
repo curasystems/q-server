@@ -16,12 +16,23 @@ describe 'starting it', ->
         expect(s).to.not.be.undefined
         expect(s).to.not.be.null
 
-    it 'can hook up to an express application', ->
-        app = express()
-        s.listen(app)
-
     it 'can only hook up when the application allows to register routes', ->
         app = {}
-        expect( ()->s.listen(app) ).to.throw( q.InvalidAppError, /invalid/ )
+        expect( ()->s.listen(app) ).to.throw( q.InvalidAppError, /route/ )
+
+    describe 'with express', ->
+
+        app = null
+
+        beforeEach ->
+            app = express()
+            s.listen(app)
+
+        it 'can get list of packages as json', (done)->
+            request(app)
+                .get('/packages')
+                .expect('Content-Type', /json/)
+                .expect(200, done)
+
 
 
