@@ -40,7 +40,6 @@ describe 'Q Server', ->
 
             request = supertest(app)
 
-
         describe 'uploading packages', ->
 
             it 'accepts new packages by uploading them', (done)->
@@ -70,7 +69,7 @@ describe 'Q Server', ->
                     .expect(200)
                     .end (err,res)->
                         res.body['my-package'][0].should.deep.equal( name:'my-package',version:'0.1.0')
-                        done()
+                        done(err)
 
             it 'is possible to list all package uids again', (done)->
                 request.get('/packages?mode=raw')
@@ -88,19 +87,26 @@ describe 'Q Server', ->
                     .end (err,res)->
                         expect(err).to.be.null
                         res.body.should.contain('0.1.0')
-                        done()
+                        done(err)
 
             it 'is possible to list all versions of a specific package', (done)->
                 request.get('/packages/unknown-package')
                     .expect(404,done)
 
-            it 'is possible to download the latest version matching a range for a specific package', (done)->
+            it 'is possible to look-up the latest version matching a range for a specific package', (done)->
                 request.get('/packages/my-package?version=~0.1')
                     .expect(200)
                     .end (err,res)->
                         res.body.should.contain('0.1.0')
-                        done()
+                        done(err)
 
             it 'returns 404 when no matching for a range is found', (done)->
                 request.get('/packages/my-package?version=>0.1.0')
                     .expect(404,done)
+
+            it 'is possible download a package by name and exact version', (done)->
+                request.get('/packages/my-package/0.1.0/download')
+                    .expect('Content-Type', 'application/octet-stream')
+                    .expect(200)
+                    .end (err,res)->
+                        done(err)

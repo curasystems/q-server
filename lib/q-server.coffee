@@ -5,6 +5,7 @@ async = require('async')
 path = require('path')
 _ = require('underscore')
 mkdirp = require('mkdirp')
+semver = require('semver')
 
 module.exports.InvalidAppError = class InvalidAppError extends Error
     constructor: (@message)->super(@message)
@@ -28,12 +29,27 @@ class QServer
 
     _configureRoutes: (app)->
 
+        app.get '/packages/:name/:version/download', (req,res)=>@_downloadPackage(req,res)
         app.get '/packages/:name', (req,res)=>@_findPackageVersions(req,res)
         app.get '/packages', (req,res)=>@_getPackages(req,res)
         app.post '/packages', (req,res)=>@_postPackages(req,res)
 
-    _findPackageVersions: (req,res)->
+    _downloadPackage: (req,res)->
+        if not req.params.name
+            res.send(400, 'module name required')
+        else if not semver.valid(req.params.version)
+            res.send(400, 'version must be valid fully specified semver')
+        else
+            packageIdentifier = req.params.name+'@'+req.params.version
+            @store.readPackage packageIdentifier, (err,packageStream)->
+                if err
+                    res.send(500,err)
+                else
+                    res.type('application/octet-stream')
+                    packageStream.pipe(res)
 
+
+    _findPackageVersions: (req,res)->
         filter = req.query.version ? '>=0'
         
         @store.findMatching req.params.name, filter, (err,versions)->
