@@ -26,7 +26,8 @@
     "source-map-support": "git://github.com/curasystems/node-source-map-support.git",
     "commander": "~1.1.1",
     "async": "~0.2.7",
-    "underscore": "~1.4.4"
+    "underscore": "~1.4.4",
+    "semver": "~1.1.4"
   },
   "devDependencies": {
     "sinon": "~1.6.0",
