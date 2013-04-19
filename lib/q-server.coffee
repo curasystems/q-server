@@ -1,4 +1,6 @@
-q = require('q')
+Q = require('q')
+qStore = require('q-fs-store')
+
 async = require('async')
 path = require('path')
 _ = require('underscore')
@@ -16,6 +18,8 @@ module.exports = (options)->
 class QServer
 
     constructor: (@options)->
+        @store = new qStore(path:@options.path)
+        @q = new Q(store:@store)
 
     listen: (app)->
         if not app.get
@@ -24,31 +28,30 @@ class QServer
 
     _configureRoutes: (app)->
 
-        app.get '/packages', (req,res)->
+        app.get '/packages/', (req,res)=>@_getPackages(req,res)
+        app.get '/packages/raw', (req,res)=>@_getRawPackages(req,res)
+        app.post '/packages', (req,res)=>@_postPackages(req,res)
 
-            packages = 
-                raw: 
-                    uid: ''
-                    name: ''
+    _getPackages: (req,res)->
+    _getRawPackages: (req,res)->
+        res.send 200, {b74ed98ef279f61233bad0d4b34c1488f8525f27:'test'}
 
-            res.send( 200, packages )
+    _postPackages: (req,res)->
+        
+        attachments = @_getAttachments(req)
+        return res.send(400) if attachments.length == 0
 
-        app.post '/packages', (req,res)=>
+        processingErrors = []
+        validationResults = []
 
-            attachments = @_getAttachments(req)
-            return res.send(400) if attachments.length == 0
-    
-            processingErrors = []
-            validationResults = []
+        for a in attachments
+            @_verifyPackage a, (err,result)=>
+                processingErrors.push(err) if err
+                validationResults.push(result)
 
-            for a in attachments
-                @_verifyPackage a, (err,result)=>
-                    processingErrors.push(err) if err
-                    validationResults.push(result)
-
-                    if validationResults.length == attachments.length
-                        @_afterAllPackagesVerified(req,res,attachments,validationResults)
-                        
+                if validationResults.length == attachments.length
+                    @_afterAllPackagesVerified(req,res,attachments,validationResults)
+                    
     _afterAllPackagesVerified: (req, res, attachments, validationResults)->
         
         allPackagesValid = _.every validationResults, (r)->r?.valid
@@ -61,21 +64,23 @@ class QServer
                 res.send 202
 
     _verifyPackage: (uploadedPackage, callback)->
-        q.verifyPackage uploadedPackage.path, callback
+        @q.verifyPackage uploadedPackage.path, callback
 
     _importPackage: (uploadedPackage, callback)->
-        q.listPackage uploadedPackage.path, (err,listing)=>
+
+        @q.listPackageContent uploadedPackage.path, (err,listing)=>
             return callback(err) if err
 
-            storagePath = @_getStoragePathForPackage(listing)
+            packageInfo=
+                uid:listing.uid
+                name:listing.name
+                version:listing.version
+                description:listing.description
 
-            mkdirp path.dirname(storagePath), =>
-
-                outputStream = fs.createWriteStream(storagePath)
-                fs.createReadStream(uploadedPackage.path).pipe(outputStream)
+            @store.writePackage packageInfo, (err,storageStream)=>
+                fs.createReadStream(uploadedPackage.path).pipe(storageStream)
                 
-                outputStream.on 'close', ->
-                    console.log "package imported at", storagePath
+                storageStream.on 'close', ->
                     callback(null)
 
     _getStoragePathForPackage: (listing)->

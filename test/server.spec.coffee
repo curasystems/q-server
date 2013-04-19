@@ -11,7 +11,7 @@ describe 'starting it', ->
 
     s = null
     TEST_OPTIONS=
-        store: "#{__dirname}/store"
+        path: "#{__dirname}/store"
 
     beforeEach ()->
         s = q(TEST_OPTIONS)
@@ -80,13 +80,13 @@ describe 'starting it', ->
                         fs.existsSync(expectedPath).should.be.true
 
 
-            it.skip 'is possible to list them again', ->
-                  request.get('/packages')
+            it.only 'is possible to list them again', ->
+                  request.get('/packages/raw')
                     .expect('Content-Type', /json/)
                     .expect(200)
                     .end (err,res)->
                         expect(err).to.be.null
-                        expect( res.body.raw.b74ed98ef279f61233bad0d4b34c1488f8525f27 ).to.not.be.undefined
+                        expect( res.body.b74ed98ef279f61233bad0d4b34c1488f8525f27 ).to.not.be.undefined
 
 
 
