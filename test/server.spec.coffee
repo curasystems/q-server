@@ -7,21 +7,22 @@ wrench = require('wrench')
 
 {expect} = require('./testing')
 
-describe 'starting it', ->
+describe 'Q Server', ->
 
     s = null
     TEST_OPTIONS=
         path: "#{__dirname}/store"
 
     beforeEach ()->
-        s = q(TEST_OPTIONS)
         wrench.rmdirSyncRecursive TEST_OPTIONS.path if fs.existsSync TEST_OPTIONS.path
 
     it 'can be built', ->
+        s = q(TEST_OPTIONS)
         expect(s).to.not.be.undefined
         expect(s).to.not.be.null
 
     it 'can only hook up when the application allows to register routes', ->
+        s = q(TEST_OPTIONS)
         app = {}
         expect( ()->s.listen(app) ).to.throw( q.InvalidAppError, /route/ )
 

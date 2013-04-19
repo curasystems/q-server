@@ -35,13 +35,15 @@
     </script>
   </head>
   <body>    <section class="suite">
-      <h1>starting it</h1>
+      <h1>Q Server</h1>
       <dl>
         <dt>can be built</dt>
-        <dd><pre><code>expect(s).to.not.be.undefined;
+        <dd><pre><code>s = q(TEST_OPTIONS);
+expect(s).to.not.be.undefined;
 return expect(s).to.not.be[&quot;null&quot;];</code></pre></dd>
         <dt>can only hook up when the application allows to register routes</dt>
         <dd><pre><code>var app;
+s = q(TEST_OPTIONS);
 app = {};
 return expect(function() {
   return s.listen(app);
@@ -94,7 +96,6 @@ return expect(function() {
                 <dd><pre><code>return request.get('/packages/my-package?version=&gt;0.1.0').expect(404, done);</code></pre></dd>
               </dl>
             </section>
-          </dl>
 
   </body>
 </html>
