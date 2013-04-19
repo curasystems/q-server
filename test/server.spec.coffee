@@ -81,10 +81,14 @@ describe 'starting it', ->
                         done()
 
             it 'is possible to list all versions of a specific package', (done)->
-                request.get('/packages/my-package/versions')
+                request.get('/packages/my-package')
                     .expect('Content-Type', /json/)
                     .expect(200)
                     .end (err,res)->
                         expect(err).to.be.null
                         res.body.should.contain('0.1.0')
                         done()
+
+            it 'is possible to list all versions of a specific package', (done)->
+                request.get('/packages/unknown-package')
+                    .expect(404,done)

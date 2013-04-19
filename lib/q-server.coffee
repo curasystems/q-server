@@ -28,16 +28,16 @@ class QServer
 
     _configureRoutes: (app)->
 
-        app.get '/packages/:name/versions', (req,res)=>@_findPackageVersions(req,res)
+        app.get '/packages/:name', (req,res)=>@_findPackageVersions(req,res)
         app.get '/packages', (req,res)=>@_getPackages(req,res)
         app.post '/packages', (req,res)=>@_postPackages(req,res)
 
     _findPackageVersions: (req,res)->
         @store.listVersions req.params.name, (err,versions)->
             if err
-                res.end(500,err)
+                res.send(500,err)
             else if versions.length == 0
-                res.json(404)
+                res.send(404)
             else
                 res.json(200,versions)
 
@@ -45,13 +45,13 @@ class QServer
         if req.query.mode == 'raw'
             @store.listRaw (err,list)->
                 if err
-                    res.end(500,err)
+                    res.send(500,err)
                 else
                     res.json(200,list)
         else
             @store.listAll (err,list)->
                 if err
-                    res.end(500,err)
+                    res.send(500,err)
                 else
                     groupedByName = _.groupBy list, 'name'
                     res.json(200,groupedByName)
