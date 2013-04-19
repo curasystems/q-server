@@ -68,15 +68,18 @@ describe 'starting it', ->
                     .expect('Content-Type', /json/)
                     .expect(200)
                     .end (err,res)->
-                        res.body['my-package'].should.not.be.empty
+                        res.body['my-package'][0].should.deep.equal( name:'my-package',version:'0.1.0')
                         done()
 
-            it 'is possible to list them again', ->
-                  request.get('/packages/raw')
+            it 'is possible to list all package uids again', (done)->
+                request.get('/packages?mode=raw')
                     .expect('Content-Type', /json/)
                     .expect(200)
                     .end (err,res)->
                         expect(err).to.be.null
-                        expect( res.body.b74ed98ef279f61233bad0d4b34c1488f8525f27 ).to.not.be.undefined
+                        res.body.should.contain('b74ed98ef279f61233bad0d4b34c1488f8525f27') 
+                        done()
 
+            #it 'is possible to list all versions of a specific package', ->
+            #    request.get('/packages/my-package')
 

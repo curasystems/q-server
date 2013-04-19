@@ -29,25 +29,23 @@ class QServer
     _configureRoutes: (app)->
 
         app.get '/packages', (req,res)=>@_getPackages(req,res)
-        app.get '/packages/raw', (req,res)=>@_getRawPackages(req,res)
         app.post '/packages', (req,res)=>@_postPackages(req,res)
 
     _getPackages: (req,res)->
-
-        @store.listAll (err,list)->
-            if err
-                res.end(500,err)
-            else
-                groupedByName = _.groupBy list, 'name'
-                res.json(200,groupedByName)
-       
-
-    _getRawPackages: (req,res)->
-        @store.listRaw (err,list)->
-            if err
-                res.end(500,err)
-            else
-                res.json(200,list)
+        if req.query.mode == 'raw'
+            @store.listRaw (err,list)->
+                if err
+                    res.end(500,err)
+                else
+                    res.json(200,list)
+        else
+            @store.listAll (err,list)->
+                if err
+                    res.end(500,err)
+                else
+                    groupedByName = _.groupBy list, 'name'
+                    res.json(200,groupedByName)
+        
 
     _postPackages: (req,res)->
         
