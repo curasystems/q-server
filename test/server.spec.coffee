@@ -92,3 +92,14 @@ describe 'starting it', ->
             it 'is possible to list all versions of a specific package', (done)->
                 request.get('/packages/unknown-package')
                     .expect(404,done)
+
+            it 'is possible to download the latest version matching a range for a specific package', (done)->
+                request.get('/packages/my-package?version=~0.1')
+                    .expect(200)
+                    .end (err,res)->
+                        res.body.should.contain('0.1.0')
+                        done()
+
+            it 'returns 404 when no matching for a range is found', (done)->
+                request.get('/packages/my-package?version=>0.1.0')
+                    .expect(404,done)

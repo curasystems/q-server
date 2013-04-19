@@ -33,7 +33,10 @@ class QServer
         app.post '/packages', (req,res)=>@_postPackages(req,res)
 
     _findPackageVersions: (req,res)->
-        @store.listVersions req.params.name, (err,versions)->
+
+        filter = req.query.version ? '>=0'
+        
+        @store.findMatching req.params.name, filter, (err,versions)->
             if err
                 res.send(500,err)
             else if versions.length == 0
@@ -100,7 +103,6 @@ class QServer
 
             @store.writePackage packageInfo, (err,storageStream)=>
                 fs.createReadStream(uploadedPackage.path).pipe(storageStream)
-                
                 storageStream.on 'close', ->
                     callback(null)
 
