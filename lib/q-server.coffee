@@ -28,8 +28,18 @@ class QServer
 
     _configureRoutes: (app)->
 
+        app.get '/packages/:name/versions', (req,res)=>@_findPackageVersions(req,res)
         app.get '/packages', (req,res)=>@_getPackages(req,res)
         app.post '/packages', (req,res)=>@_postPackages(req,res)
+
+    _findPackageVersions: (req,res)->
+        @store.listVersions req.params.name, (err,versions)->
+            if err
+                res.end(500,err)
+            else if versions.length == 0
+                res.json(404)
+            else
+                res.json(200,versions)
 
     _getPackages: (req,res)->
         if req.query.mode == 'raw'

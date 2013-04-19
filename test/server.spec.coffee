@@ -80,6 +80,11 @@ describe 'starting it', ->
                         res.body.should.contain('b74ed98ef279f61233bad0d4b34c1488f8525f27') 
                         done()
 
-            #it 'is possible to list all versions of a specific package', ->
-            #    request.get('/packages/my-package')
-
+            it 'is possible to list all versions of a specific package', (done)->
+                request.get('/packages/my-package/versions')
+                    .expect('Content-Type', /json/)
+                    .expect(200)
+                    .end (err,res)->
+                        expect(err).to.be.null
+                        res.body.should.contain('0.1.0')
+                        done()
