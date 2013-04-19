@@ -15,8 +15,7 @@ describe 'starting it', ->
 
     beforeEach ()->
         s = q(TEST_OPTIONS)
-        wrench.rmdirSyncRecursive TEST_OPTIONS.store if fs.existsSync TEST_OPTIONS.store
-       
+        wrench.rmdirSyncRecursive TEST_OPTIONS.path if fs.existsSync TEST_OPTIONS.path
 
     it 'can be built', ->
         expect(s).to.not.be.undefined
@@ -39,13 +38,7 @@ describe 'starting it', ->
             s.listen(app)
 
             request = supertest(app)
-        
-        describe 'reading information', ->
 
-            it 'can get list of packages as json', (done)->
-                request.get('/packages')
-                    .expect('Content-Type', /json/)
-                    .expect(200, done)
 
         describe 'uploading packages', ->
 
@@ -70,23 +63,20 @@ describe 'starting it', ->
                     .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
                     .end(done)
 
-            it 'stores them in the storage path as defined via the options ', ->
-                  request.get('/packages')
-                    .end ->
-                        firstDirName = 'b7'
-                        filename = 'b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg'
+            it 'can get list of packages as json', (done)->
+                request.get('/packages')
+                    .expect('Content-Type', /json/)
+                    .expect(200)
+                    .end (err,res)->
+                        res.body['my-package'].should.not.be.empty
+                        done()
 
-                        expectedPath = path.join(TEST_OPTIONS.store,firstDirName,filename)
-                        fs.existsSync(expectedPath).should.be.true
-
-
-            it.only 'is possible to list them again', ->
+            it 'is possible to list them again', ->
                   request.get('/packages/raw')
                     .expect('Content-Type', /json/)
                     .expect(200)
                     .end (err,res)->
                         expect(err).to.be.null
                         expect( res.body.b74ed98ef279f61233bad0d4b34c1488f8525f27 ).to.not.be.undefined
-
 
 

@@ -1,4 +1,4 @@
 q-server
 ========
 
-A binary package server. Uses socket.io to notify clients of available packages.
+A binary package http server. Uses socket.io to notify clients of available packages.
