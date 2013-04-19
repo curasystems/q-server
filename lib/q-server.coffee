@@ -1,4 +1,5 @@
 Q = require('q')
+fs = require('fs')
 qStore = require('q-fs-store')
 
 async = require('async')
@@ -46,6 +47,7 @@ class QServer
                     res.send(500,err)
                 else
                     res.type('application/octet-stream')
+                    res.setHeader('Content-Disposition', "filename=#{packageIdentifier}.pkg")
                     packageStream.pipe(res)
 
 
