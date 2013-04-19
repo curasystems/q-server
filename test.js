@@ -49,10 +49,34 @@ function addAllFilesInFolderToMocha( mocha, folderPath, extension ) {
 }
 
 function runMochaTests(mocha){
+
+  if(argv.reporter === 'doc') {
+
+    resultFilePath = __dirname+'/test-result.html'
+    
+    headerFilePath = __dirname+'/test-html/header.html'
+    header = fs.readFileSync(headerFilePath,{encoding:'utf8'})
+  
+    fs.writeFileSync(resultFilePath, header)
+    file = fs.createWriteStream( resultFilePath, {flags:'a+',encoding:'utf8'})
+
+    process.stdout.write = function(data){
+      file.write(data)
+    }
+  }
+
   mocha.run(function(failures){
+
+    if(argv.reporter === 'doc') {
+      footerFilePath = __dirname+'/test-html/footer.html'
+      footer = fs.readFileSync(footerFilePath,{encoding:'utf8'})
+      fs.appendFileSync(resultFilePath, footer)
+    }
+
     if( failures>0 ){
       showGrowlMessage(failures);
     };
+
     process.exit(failures);
   });
 }

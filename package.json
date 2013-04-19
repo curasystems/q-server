@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node test.js --reporter tap",
+    "doc": "node test.js --reporter doc"
     "testing": "supervisor -e js,coffee -n exit -- test.js --reporter spec"
   },
   "bin": "./cli.js",

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>q-server</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+    <style>
+      body {
+        font: 16px/1.6 "Helvetica Neue", arial, sans-serif;
+        padding: 60px;
+      }
+      pre { font-size: 14px; line-height: 1.3 }
+      code .init { color: #2F6FAD }
+      code .string { color: #5890AD }
+      code .keyword { color: #8A6343 }
+      code .number { color: #2F6FAD }
+    </style>
+    <script>
+      $(function(){
+        $('code').each(function(){
+          $(this).html(highlight($(this).text()));
+        });
+      });
+
+      function highlight(js) {
+        return js
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\/\/(.*)/gm, '<span class="comment">//$1</span>')
+          .replace(/('.*')/gm, '<span class="string">$1</span>')
+          .replace(/(\d+\.\d+)/gm, '<span class="number">$1</span>')
+          .replace(/(\d+)/gm, '<span class="number">$1</span>')
+          .replace(/\bnew *(\w+)/gm, '<span class="keyword">new</span> <span class="init">$1</span>')
+          .replace(/\b(function|new|throw|return|var|if|else)\b/gm, '<span class="keyword">$1</span>')
+      }
+    </script>
+  </head>
+  <body>    <section class="suite">
+      <h1>starting it</h1>
+      <dl>
+        <dt>can be built</dt>
+        <dd><pre><code>expect(s).to.not.be.undefined;
+return expect(s).to.not.be[&quot;null&quot;];</code></pre></dd>
+        <dt>can only hook up when the application allows to register routes</dt>
+        <dd><pre><code>var app;
+app = {};
+return expect(function() {
+  return s.listen(app);
+}).to[&quot;throw&quot;](q.InvalidAppError, /route/);</code></pre></dd>
+        <section class="suite">
+          <h1>with express</h1>
+          <dl>
+            <section class="suite">
+              <h1>uploading packages</h1>
+              <dl>
+                <dt>accepts new packages by uploading them</dt>
+                <dd><pre><code>return request.post('/packages').attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', &quot;&quot; + __dirname + &quot;/packages/valid.zip&quot;).expect(202, done);</code></pre></dd>
+                <dt>posts without packages are not accepted</dt>
+                <dd><pre><code>return request.post('/packages').expect(400, done);</code></pre></dd>
+                <dt>invalid packages are not accepted</dt>
+                <dd><pre><code>return request.post('/packages').attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', &quot;&quot; + __dirname + &quot;/packages/manipulated.zip&quot;).expect(400, done);</code></pre></dd>
+              </dl>
+            </section>
+            <section class="suite">
+              <h1>once packages are uploaded</h1>
+              <dl>
+                <dt>can get list of packages as json</dt>
+                <dd><pre><code>return request.get('/packages').expect('Content-Type', /json/).expect(200).end(function(err, res) {
+  res.body['my-package'][0].should.deep.equal({
+    name: 'my-package',
+    version: '0.1.0'
+  });
+  return done();
+});</code></pre></dd>
+                <dt>is possible to list all package uids again</dt>
+                <dd><pre><code>return request.get('/packages?mode=raw').expect('Content-Type', /json/).expect(200).end(function(err, res) {
+  expect(err).to.be[&quot;null&quot;];
+  res.body.should.contain('b74ed98ef279f61233bad0d4b34c1488f8525f27');
+  return done();
+});</code></pre></dd>
+                <dt>is possible to list all versions of a specific package</dt>
+                <dd><pre><code>return request.get('/packages/my-package').expect('Content-Type', /json/).expect(200).end(function(err, res) {
+  expect(err).to.be[&quot;null&quot;];
+  res.body.should.contain('0.1.0');
+  return done();
+});</code></pre></dd>
+                <dt>is possible to list all versions of a specific package</dt>
+                <dd><pre><code>return request.get('/packages/unknown-package').expect(404, done);</code></pre></dd>
+                <dt>is possible to download the latest version matching a range for a specific package</dt>
+                <dd><pre><code>return request.get('/packages/my-package?version=~0.1').expect(200).end(function(err, res) {
+  res.body.should.contain('0.1.0');
+  return done();
+});</code></pre></dd>
+                <dt>returns 404 when no matching for a range is found</dt>
+                <dd><pre><code>return request.get('/packages/my-package?version=&gt;0.1.0').expect(404, done);</code></pre></dd>
+              </dl>
+            </section>
+          </dl>
+
+  </body>
+</html>
