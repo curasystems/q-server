@@ -44,7 +44,7 @@ class QServer
             packageIdentifier = req.params.name+'@'+req.params.version
             @store.readPackage packageIdentifier, (err,packageStream)->
                 if err
-                    res.send(500,err)
+                    res.send(404)
                 else
                     res.type('application/octet-stream')
                     res.setHeader('Content-Disposition', "filename=#{packageIdentifier}.pkg")
