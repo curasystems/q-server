@@ -110,7 +110,6 @@ class QServer
                 res.json(200,versions)
 
     _getPackages: (req,res)->
-        console.log req
         if req.query.mode == 'raw'
             @store.listRaw (err,list)->
                 if err
