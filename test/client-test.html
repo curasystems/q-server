@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <script src="http://cdn.sockjs.org/sockjs-0.3.min.js" >
+        </script>
+        <script type="text/javascript">
+            var ENDPOINT = 'https://localhost:8963/live/packages';
+            var sock = connect(ENDPOINT);
+            var data;
+
+            function connect(endpoint){
+                var sock = new SockJS(endpoint, {debug:true});
+                var down = true;
+                sock.onopen = function() {
+                   console.log('OPEN');
+                   down = false;
+                   sock.send(JSON.stringify({something:"interesting"}))
+                };
+                sock.onmessage = function(e) {
+                   data = JSON.parse(e.data);
+                   console.log('message', data.date);
+                };
+                sock.onclose = function() {
+                   if(!down)
+                       console.log('CLOSED');    
+                   down = true;
+
+                   console.log('reconnecting...');
+                   sock = connect(ENDPOINT);
+                }; 
+
+                return sock;      
+            }
+
+         
+
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>

@@ -11,6 +11,9 @@ semver = require('semver')
 module.exports.InvalidAppError = class InvalidAppError extends Error
     constructor: (@message)->super(@message)
 
+module.exports.InvalidIOError = class InvalidIOError extends Error
+    constructor: (@message)->super(@message)
+
 module.exports = (options)->
     if not options 
         throw Error("Options required")
@@ -23,10 +26,25 @@ class QServer
         @store = new qStore(path:@options.path)
         @q = new Q(store:@store)
 
-    listen: (app)->
+    listen: (app, io)->
         if not app.get
             throw new InvalidAppError('must be able to register get route on app')
+        
+        if io and not io.on
+            throw new InvalidIOError('second parameter is no socket emitter instance')
+        
         @_configureRoutes(app)
+        @_configureSockets(io) if io
+        
+    _configureSockets: (io)->
+        io.on 'connection', (connection)->
+            #console.log "connection", connection
+            #connection.on 'message', (message)->
+            #    console.log 'M:', message
+            connection.write(JSON.stringify(date:new Date()))
+            setInterval(()->
+                    connection.write(JSON.stringify(date:new Date()))
+                ,1000);
 
     _configureRoutes: (app)->
 
@@ -63,6 +81,7 @@ class QServer
                 res.json(200,versions)
 
     _getPackages: (req,res)->
+        console.log req
         if req.query.mode == 'raw'
             @store.listRaw (err,list)->
                 if err
