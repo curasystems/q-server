@@ -12,31 +12,33 @@ describe.only 'Q Server Realtime', ->
     socket = null
     
     listener = null
-    connections = null
+    request = null
 
     Q_OPTIONS =
         path: "#{__dirname}/store"
 
     beforeEach ()->
         wrench.rmdirSyncRecursive Q_OPTIONS.path if fs.existsSync Q_OPTIONS.path
-        socket = connect()
 
-    it.only 'opens a socket.io server to connect to', (done)->
-        socket.on 'connection', ()->
-            done()
+    describe 'on startup', ->
 
+        it 'opens a sockjs server to connect to', (done)->
+            socket = connect()
+            socket.on 'connection', ()->
+                done()
+        
     describe 'when a client subscribed to packages channel', ->
 
         beforeEach (done)->
+            socket = connect()
             socket.on 'connection', ()->
                 packageSubscription = 
                     command: 'subscribe'
                     channel: 'packages'
 
                 socket.write JSON.stringify(packageSubscription)
-
                 done()
-
+    
         it 'sends a confirmation', (done)->
             waitForMessages 1, (message)->
                 expect(message.type).to.equal('subscribed')
@@ -47,26 +49,42 @@ describe.only 'Q Server Realtime', ->
                 expect(messages[1].type).to.equal('list')
                 messages[1].packages.should.be.empty
                 done()
-                
+    
+    describe 'when the server already has packages installed', ->
 
-        waitForMessages = (expectedNumberOfMessages,cb)->
-            messages = []
-            socket.on 'data', (data)->
-                return if messages is null
+        beforeEach (done)->
+            request.post('/packages')
+                .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
+                .expect(202, done)
 
-                #console.log data
-                message = JSON.parse(data)
+        it 'includes any previously installed packages', (done)->
+
+            waitForMessages 2, (messages)->
+                expect(messages[1].type).to.equal('list')
+                messages[1].packages.should.have.length(1)
+
+                done()
+
+
+    waitForMessages = (expectedNumberOfMessages,cb)->
+        messages = []
+        socket = connect() 
+        socket.on 'data', (data)->
+            return if messages is null
+
+            #console.log data
+            message = JSON.parse(data)
+            
+            messages.push(message)
                 
-                messages.push(message)
-                    
-                if expectedNumberOfMessages == 1
+            if expectedNumberOfMessages == 1
+                messages = null
+                cb(message)
+            else
+                if(expectedNumberOfMessages == messages.length)
+                    messagesReceived = messages
                     messages = null
-                    cb(message)
-                else
-                    if(expectedNumberOfMessages == messages.length)
-                        messagesReceived = messages
-                        messages = null
-                        cb(messagesReceived)
+                    cb(messagesReceived)
 
     connect = (cb)->
         
@@ -123,16 +141,7 @@ describe.only 'Q Server Realtime', ->
         s = new qServer(Q_OPTIONS)
         s.listen(app,sockjs)
 
-        #
-        # Keep a list of all active connections for graceful 
-        # shutdown after test
-        #    
-        connections = []
-        server.on 'connection', (c)->
-            connections.push(c)
-            c.on 'close', ()->
-                connections.splice(connections.indexOf(c), 1)
-
-    
+        # Setup a request object to talk to server via http requests        
+        request = supertest(app)
 
         return server
