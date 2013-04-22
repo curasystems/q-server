@@ -37,21 +37,32 @@ class QServer
         @_configureSockets(io) if io
         
     _configureSockets: (io)->
-        io.on 'connection', (connection)=>
-            
-            confirmation = 
-                type: 'subscribed'
+        io.on 'connection', (subscriber)=>
+            @_confirmSubscriptionToSubscriber(subscriber)            
+            @_sendPackageListToSubscriber(subscriber)
+            subscriber.on 'data', (data)=>
+                message = JSON.parse(data)
+                if message.command == 'list-packages'
+                    @_sendPackageListToSubscriber(subscriber)
 
-            connection.write(JSON.stringify(confirmation))
+        
+    _confirmSubscriptionToSubscriber: (subscriber)->
+        confirmation = 
+            type: 'subscribed'
 
-            @store.listAll (err,list)->
-                if err
-                    #res.send(500,err)
-                else
-                    listEvent = 
-                        type: 'package-list'
-                        packages: list
-                    connection.write(JSON.stringify(listEvent))
+        subscriber.write(JSON.stringify(confirmation))
+
+
+    _sendPackageListToSubscriber: (subscriber)->
+
+        @store.listAll (err,list)->
+            if err
+                #res.send(500,err)
+            else
+                listEvent = 
+                    type: 'package-list'
+                    packages: list
+                subscriber.write(JSON.stringify(listEvent))
 
     _configureRoutes: (app)->
 

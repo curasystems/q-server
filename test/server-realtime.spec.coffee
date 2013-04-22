@@ -65,6 +65,15 @@ describe.only 'Q Server Realtime', ->
                 packages.should.deep.equal [ {name:'my-package',version:'0.1.0'} ]
                 done()
 
+        it 'is possible to ask for a fresh list at any time', (done)->
+            waitForMessages 3, (messages)->
+                packagesA = messages[1].packages
+                packagesB = messages[2].packages
+                packagesA.should.deep.equal packagesB
+                done()
+
+            listPackages = command: 'list-packages'
+            socket.write JSON.stringify(listPackages)
 
     waitForMessages = (expectedNumberOfMessages,cb)->
         messages = []
