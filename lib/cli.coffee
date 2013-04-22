@@ -18,4 +18,4 @@ options =
 w = webserver.create(options)
 w.server.listen(8963);
 
-console.log "Listining on #{w.server.address().address}:#{w.server.address().port}"
+console.log "Listening on #{w.server.address().address}:#{w.server.address().port}"
