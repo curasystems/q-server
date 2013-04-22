@@ -43,7 +43,7 @@ describe 'Q Server', ->
 
             it 'accepts new packages by uploading them', (done)->
                 request.post('/packages')
-                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
+                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
                     .expect(202,done)
 
             it 'posts without packages are not accepted', (done)->
@@ -59,7 +59,7 @@ describe 'Q Server', ->
 
             beforeEach (done)->
                 request.post('/packages')
-                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
+                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
                     .end(done)
 
             it 'can get list of packages as json', (done)->

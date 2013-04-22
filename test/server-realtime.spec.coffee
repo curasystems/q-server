@@ -51,16 +51,19 @@ describe 'Q Server Realtime', ->
                 done()
 
         it 'it gets a list whenever a new package is added', (done)->
-            waitForMessages 3, (messages)->
+            waitForMessages 4, (messages)->
                 packagesA = messages[1].packages
                 packagesB = messages[2].packages
-                
+                packagesC = messages[3].packages
+
                 packagesA.should.be.empty
-                packagesB.should.have.length(1)
+                packagesB.should.have.length.of.at.least(1)
+                packagesC.should.have.length(2)
 
                 done()
     
             uploadPackage()
+            uploadPackageWithName('valid-0.2.0')
 
     describe 'when the server already has packages installed', ->
 
@@ -88,8 +91,11 @@ describe 'Q Server Realtime', ->
             socket.write JSON.stringify(listPackages)
 
     uploadPackage = (cb) ->
+        uploadPackageWithName('valid-0.1.0',cb)
+
+    uploadPackageWithName = (name, cb) ->
         request.post('/packages')
-            .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid.zip")
+            .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/#{name}.zip")
             .expect(202)
             .end ()->cb() if cb
 
