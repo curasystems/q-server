@@ -21,30 +21,30 @@ describe.only 'Q Server Realtime', ->
         wrench.rmdirSyncRecursive Q_OPTIONS.path if fs.existsSync Q_OPTIONS.path
         socket = connect()
 
-    afterEach ()->
-        disconnect(socket)
-
     it.only 'opens a socket.io server to connect to', (done)->
-
         socket.on 'connection', ()->
             done()
-        
-    it 'allow to subscribe to the list of packages', (done)->
-        socket.on 'connection', ()->
-            packageSubscription = 
-                command: 'subscribe'
-                channel: 'packages'
 
-            socket.write JSON.stringify(packageSubscription)
+    describe 'when a client subscribed to packages channel', ->
 
-        socket.on 'data', (data)->
-            message = JSON.parse(data)
-            expect(message.event).to.equal 'subscribed'
+        messages = []
 
-            done()
+        beforeEach (done)->
+            socket.on 'connection', ()->
+                packageSubscription = 
+                    command: 'subscribe'
+                    channel: 'packages'
 
-        socket.on 'error', (error)->
-            console.log "ERR", error
+                socket.write JSON.stringify(packageSubscription)
+
+            socket.on 'data', (data)->
+                messages.push( JSON.parse(data) )
+                done()
+
+        it 'sends a confirmation', ()->
+            expect(messages[0].event).to.equal 'subscribed'
+
+
 
     connect = (cb)->
         
@@ -53,10 +53,6 @@ describe.only 'Q Server Realtime', ->
         listener = server.listen()
 
         return socketClient.create("https://127.0.0.1:#{server.address().port}/live/packages")
-
-    disconnect = (socket)->
-        socket.close()
-        shutdownWebServer()
 
     createWebServer = ()->
         
@@ -118,7 +114,3 @@ describe.only 'Q Server Realtime', ->
     
 
         return server
-
-    shutdownWebServer = ()->
-        for connection in connections
-            connection.destroy()
