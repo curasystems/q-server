@@ -28,7 +28,8 @@
     "async": "~0.2.7",
     "underscore": "~1.4.4",
     "semver": "~1.1.4",
-    "sockjs": "~0.3.5"
+    "sockjs": "~0.3.5",
+    "temp": "~0.5.0"
   },
   "devDependencies": {
     "sinon": "~1.6.0",

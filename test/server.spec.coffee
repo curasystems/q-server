@@ -43,7 +43,7 @@ describe 'Q Server', ->
 
             it 'accepts new packages by uploading them', (done)->
                 request.post('/packages')
-                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
+                    .attach('0.1.0.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
                     .expect(202,done)
 
             it 'posts without packages are not accepted', (done)->
@@ -52,15 +52,36 @@ describe 'Q Server', ->
 
             it 'invalid packages are not accepted', (done)->
                 request.post('/packages')
-                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/manipulated.zip")
+                    .attach('0.1.0.pkg', "#{__dirname}/packages/manipulated.zip")
                     .expect(400,done)
+
+        describe 'uploading packages as diffs', ->
+
+            it 'by posting a bsdiff', (done)->
+                
+                request.post('/packages')
+                    .attach('0.1.0.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
+                    .expect(202)
+                    .end (err,req)->
+                        done(err) if err
+
+                        #post patch
+                        request.post('/packages/my-package/0.1.0/patch')
+                            .attach('valid-0.1.0-0.2.0.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
+                            .expect(200,done)
+
+            it 'returns 404 if source package does not exist ', (done)->
+                request.post('/packages/my-package/0.1.0/patch')
+                    .attach('valid-0.1.0-0.2.0.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
+                    .expect(404,done)
+
 
         describe 'once packages are uploaded', ->
 
             beforeEach (done)->
                 request.post('/packages')
                     .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
-                    .end(done)
+                    .expect(202,done)
 
             it 'can get list of packages as json', (done)->
                 request.get('/packages')

@@ -8,6 +8,9 @@ _ = require('underscore')
 mkdirp = require('mkdirp')
 semver = require('semver')
 
+patch = require('./patch')
+temp = require('temp')
+
 module.exports.InvalidAppError = class InvalidAppError extends Error
     constructor: (@message)->super(@message)
 
@@ -81,6 +84,7 @@ class QServer
         app.get '/packages/:name', (req,res)=>@_findPackageVersions(req,res)
         app.get '/packages', (req,res)=>@_getPackages(req,res)
         app.post '/packages', (req,res)=>@_postPackages(req,res)
+        app.post '/packages/:name/:version/patch', (req,res)=>@_postPatch(req,res)
 
     _downloadPackage: (req,res)->
         if not req.params.name
@@ -123,43 +127,74 @@ class QServer
                 else
                     groupedByName = _.groupBy list, 'name'
                     res.json(200,groupedByName)
+
+    _postPatch: (req,res)->        
+
         
+        attachments = @_getAttachments(req)
+        return res.send(400) if attachments.length != 1
+        
+        patchPath = attachments[0].path
+
+        packageName = req.params.name
+        packageVersion = req.params.version
+        packageIdentifier = "#{packageName}@#{packageVersion}"
+
+        @store.getPackageStoragePath packageIdentifier, (err,packagePath)=>
+            return res.send(404) if err or not fs.existsSync(packagePath)
+                
+            patchedPath = temp.path(suffix: '.pkg')
+            patch packagePath, patchedPath, patchPath, (err)=>
+                return res.send(500) if err
+            
+                fs.exists patchedPath, (exists)=>
+                    return res.send(400) if not exists
+                
+                    @_importPackage patchedPath, (err)=>
+                        return res.send(400) if err
+                        return res.send(200)    
 
     _postPackages: (req,res)->
         
         attachments = @_getAttachments(req)
         return res.send(400) if attachments.length == 0
 
+        packages = (a.path for a in attachments)
+
+        @_importPackages(packages,req,res)
+
+    _importPackages: (packages,req,res)->
+
         processingErrors = []
         validationResults = []
 
-        for a in attachments
-            @_verifyPackage a, (err,result)=>
+        for p in packages
+            @_verifyPackage p, (err,result)=>
                 processingErrors.push(err) if err
                 validationResults.push(result)
 
-                if validationResults.length == attachments.length
-                    @_afterAllPackagesVerified(req,res,attachments,validationResults)
+                if validationResults.length == packages.length
+                    @_afterAllPackagesVerified(req,res,packages,validationResults)
                     
-    _afterAllPackagesVerified: (req, res, attachments, validationResults)->
+    _afterAllPackagesVerified: (req, res, packages, validationResults)->
         
         allPackagesValid = _.every validationResults, (r)->r?.valid
         return res.send(400) if not allPackagesValid
             
-        async.eachSeries attachments, (a,cb)=>
-                @_importPackage(a,cb)
+        async.eachSeries packages, (p,cb)=>
+                @_importPackage(p,cb)
             , (err)=>
                 return res.send(500) if err
                 res.send 202
 
                 @_publishNewPackageListToSubscribers()
 
-    _verifyPackage: (uploadedPackage, callback)->
-        @q.verifyPackage uploadedPackage.path, callback
+    _verifyPackage: (packagePath, callback)->
+        @q.verifyPackage packagePath, callback
 
-    _importPackage: (uploadedPackage, callback)->
+    _importPackage: (packagePath, callback)->
 
-        @q.listPackageContent uploadedPackage.path, (err,listing)=>
+        @q.listPackageContent packagePath, (err,listing)=>
             return callback(err) if err
 
             packageInfo=
@@ -169,7 +204,7 @@ class QServer
                 description:listing.description
 
             @store.writePackage packageInfo, (err,storageStream)=>
-                fs.createReadStream(uploadedPackage.path).pipe(storageStream)
+                fs.createReadStream(packagePath).pipe(storageStream)
                 storageStream.on 'close', ->
                     callback(null)
 
