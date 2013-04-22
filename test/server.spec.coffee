@@ -58,7 +58,6 @@ describe 'Q Server', ->
         describe 'uploading packages as diffs', ->
 
             it 'by posting a bsdiff', (done)->
-                
                 request.post('/packages')
                     .attach('0.1.0.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
                     .expect(202)
@@ -74,6 +73,8 @@ describe 'Q Server', ->
                 request.post('/packages/my-package/0.1.0/patch')
                     .attach('valid-0.1.0-0.2.0.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
                     .expect(404,done)
+
+            
 
 
         describe 'once packages are uploaded', ->

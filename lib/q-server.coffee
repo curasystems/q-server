@@ -8,7 +8,7 @@ _ = require('underscore')
 mkdirp = require('mkdirp')
 semver = require('semver')
 
-patch = require('./patch')
+bs = require('bsdiff-bin')
 temp = require('temp')
 
 module.exports.InvalidAppError = class InvalidAppError extends Error
@@ -144,7 +144,7 @@ class QServer
             return res.send(404) if err or not fs.existsSync(packagePath)
                 
             patchedPath = temp.path(suffix: '.pkg')
-            patch packagePath, patchedPath, patchPath, (err)=>
+            bs.patch packagePath, patchedPath, patchPath, (err)=>
                 return res.send(500) if err
             
                 fs.exists patchedPath, (exists)=>
