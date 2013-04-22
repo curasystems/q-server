@@ -1,5 +1,3 @@
-qServer = require('../lib/q-server')
-
 fs = require('fs')
 supertest = require('supertest')
 wrench = require('wrench')
@@ -16,6 +14,10 @@ describe 'Q Server Realtime', ->
 
     Q_OPTIONS =
         path: "#{__dirname}/store"
+
+    SOCKJS_OPTIONS = 
+        log: (severity,message)->console.log(message) if severity is 'error'
+
 
     beforeEach ()->
         wrench.rmdirSyncRecursive Q_OPTIONS.path if fs.existsSync Q_OPTIONS.path
@@ -132,49 +134,17 @@ describe 'Q Server Realtime', ->
         # since we are using a self-signed certificate
         # make sure we dont fail connecting to it
         require('https').globalAgent.options.rejectUnauthorized = false;
-                
+        webserver = require('../lib/webserver' )
 
         options = 
           key: fs.readFileSync(__dirname + '/key.pem')
           cert: fs.readFileSync(__dirname + '/cert.pem')
-          # SPDY-specific options
-          #windowSize: 1024 # Server's window size
-          #debug: yes
+          q: Q_OPTIONS
+          sockjs: SOCKJS_OPTIONS
 
-        # *** CREATE HTTP/S/SPDY SERVER
-
-        #  SPDY
-        server = require('spdy').createServer(options, app)
-
-        # STANDARD HTTPS
-        #server = require('https').createServer(options, app)
-
-        # STANDARD HTTP
-        #server = require('http').createServer(app)
-
-        # *** SETUP LIVE CONNECTIONS
+        w = webserver.create(options);
         
-        # CONFIGURE WITH SOCK-JS (dont log to console.log)
-        SOCKJS_OPTIONS = 
-            log: (severity,message)->console.log(message) if severity is 'error'
-
-        sockjs  = require('sockjs').createServer(SOCKJS_OPTIONS)
-        sockjs.installHandlers( server , {prefix:'/live/packages'} )
-
-        # *** CREATE/CONFIGURE EXPRESS SERVER
-        
-        express = require('express')
-
-        app = express()
-        app.use(express.bodyParser())
-        app.use(express.methodOverride())
-
-
-        # *** CONFIGURE THE Q Server with express and sockets
-        s = new qServer(Q_OPTIONS)
-        s.listen(app,sockjs)
-
         # Setup a request object to talk to server via http requests        
-        request = supertest(app)
-
-        return server
+        request = supertest(w.app)
+        
+        return w.server;
