@@ -50,7 +50,6 @@ describe 'Q Server Realtime', ->
                 messages[1].packages.should.be.empty
                 done()
 
-        # cannot implement until i actual have a second version of a package
         it 'it gets a list whenever a new package is added', (done)->
             waitForMessages 3, (messages)->
                 packagesA = messages[1].packages
