@@ -46,7 +46,7 @@ describe.only 'Q Server Realtime', ->
 
         it 'send the list of currently known packages', (done)->
             waitForMessages 2, (messages)->
-                expect(messages[1].type).to.equal('list')
+                expect(messages[1].type).to.equal('package-list')
                 messages[1].packages.should.be.empty
                 done()
     
@@ -60,9 +60,9 @@ describe.only 'Q Server Realtime', ->
         it 'includes any previously installed packages', (done)->
 
             waitForMessages 2, (messages)->
-                expect(messages[1].type).to.equal('list')
-                messages[1].packages.should.have.length(1)
-
+                packages = messages[1].packages
+                packages.should.have.length(1)
+                packages.should.deep.equal [ {name:'my-package',version:'0.1.0'} ]
                 done()
 
 

@@ -49,7 +49,7 @@ class QServer
                     #res.send(500,err)
                 else
                     listEvent = 
-                        type: 'list'
+                        type: 'package-list'
                         packages: list
                     connection.write(JSON.stringify(listEvent))
 
