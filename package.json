@@ -8,7 +8,7 @@
     "doc": "node test.js --reporter doc",
     "testing": "supervisor -e js,coffee -n exit -- test.js --reporter spec"
   },
-  "bin": "./cli.js",
+  "bin": { "q-server":"bin/q-server" },
   "repository": {
     "type": "git",
     "url": "git://github.com/curasystems/q-server.git"
