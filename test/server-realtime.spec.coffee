@@ -49,6 +49,18 @@ describe.only 'Q Server Realtime', ->
                 expect(messages[1].type).to.equal('package-list')
                 messages[1].packages.should.be.empty
                 done()
+
+        # cannot implement until i actual have a second version of a package
+        it.skip 'it gets a list whenever a new package is added', (done)->
+            waitForMessages 3, (messages)->
+                packagesA = messages[1].packages
+                packagesB = messages[2].packages
+                
+                packagesA.should.not.deep.equal packagesB
+
+                expect(messages[2].type).to.equal('package-list')
+                messages[2].packages.should.be.empty
+                done()
     
     describe 'when the server already has packages installed', ->
 
@@ -74,6 +86,8 @@ describe.only 'Q Server Realtime', ->
 
             listPackages = command: 'list-packages'
             socket.write JSON.stringify(listPackages)
+
+    
 
     waitForMessages = (expectedNumberOfMessages,cb)->
         messages = []

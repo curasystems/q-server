@@ -25,6 +25,7 @@ class QServer
     constructor: (@options)->
         @store = new qStore(path:@options.path)
         @q = new Q(store:@store)
+        @subscribers = []
 
     listen: (app, io)->
         if not app.get
@@ -38,20 +39,30 @@ class QServer
         
     _configureSockets: (io)->
         io.on 'connection', (subscriber)=>
-            @_confirmSubscriptionToSubscriber(subscriber)            
-            @_sendPackageListToSubscriber(subscriber)
-            subscriber.on 'data', (data)=>
-                message = JSON.parse(data)
-                if message.command == 'list-packages'
-                    @_sendPackageListToSubscriber(subscriber)
+            @_subscribe(subscriber)
 
+    _subscribe: (subscriber)->
+        @subscribers.push(subscriber)
         
+        @_confirmSubscriptionToSubscriber(subscriber)            
+        @_sendPackageListToSubscriber(subscriber)
+        
+        subscriber.on 'data', (data)=>
+            message = JSON.parse(data)
+            if message.command == 'list-packages'
+                @_sendPackageListToSubscriber(subscriber)
+
+        subscriber.on 'close', =>
+            @subscribers.splice( @subscribers.indexOf(subscriber), 1 )
+
+    _publishNewPackageListToSubscribers: ()->
+        @_sendPackageListToSubscriber(s) for s in @subscribers
+
     _confirmSubscriptionToSubscriber: (subscriber)->
         confirmation = 
             type: 'subscribed'
 
         subscriber.write(JSON.stringify(confirmation))
-
 
     _sendPackageListToSubscriber: (subscriber)->
 
@@ -138,9 +149,11 @@ class QServer
             
         async.eachSeries attachments, (a,cb)=>
                 @_importPackage(a,cb)
-            , (err)->
+            , (err)=>
                 return res.send(500) if err
                 res.send 202
+
+                @_publishNewPackageListToSubscribers()
 
     _verifyPackage: (uploadedPackage, callback)->
         @q.verifyPackage uploadedPackage.path, callback
