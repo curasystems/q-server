@@ -38,13 +38,11 @@ class QServer
         
     _configureSockets: (io)->
         io.on 'connection', (connection)->
-            #console.log "connection", connection
-            #connection.on 'message', (message)->
-            #    console.log 'M:', message
-            connection.write(JSON.stringify(date:new Date()))
-            setInterval(()->
-                    connection.write(JSON.stringify(date:new Date()))
-                ,1000);
+            
+            confirmation = 
+                event: 'subscribed'
+
+            connection.write(JSON.stringify(confirmation))
 
     _configureRoutes: (app)->
 

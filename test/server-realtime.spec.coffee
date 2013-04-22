@@ -37,8 +37,10 @@ describe.only 'Q Server Realtime', ->
 
             socket.write JSON.stringify(packageSubscription)
 
-        socket.on 'data', (message)->
-            console.log message
+        socket.on 'data', (data)->
+            message = JSON.parse(data)
+            expect(message.event).to.equal 'subscribed'
+
             done()
 
         socket.on 'error', (error)->
