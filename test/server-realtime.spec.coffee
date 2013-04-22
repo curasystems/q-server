@@ -27,8 +27,6 @@ describe.only 'Q Server Realtime', ->
 
     describe 'when a client subscribed to packages channel', ->
 
-        messages = []
-
         beforeEach (done)->
             socket.on 'connection', ()->
                 packageSubscription = 
@@ -37,14 +35,38 @@ describe.only 'Q Server Realtime', ->
 
                 socket.write JSON.stringify(packageSubscription)
 
-            socket.on 'data', (data)->
-                messages.push( JSON.parse(data) )
                 done()
 
-        it 'sends a confirmation', ()->
-            expect(messages[0].event).to.equal 'subscribed'
+        it 'sends a confirmation', (done)->
+            waitForMessages 1, (message)->
+                expect(message.type).to.equal('subscribed')
+                done()
 
+        it 'send the list of currently known packages', (done)->
+            waitForMessages 2, (messages)->
+                expect(messages[1].type).to.equal('list')
+                messages[1].packages.should.be.empty
+                done()
+                
 
+        waitForMessages = (expectedNumberOfMessages,cb)->
+            messages = []
+            socket.on 'data', (data)->
+                return if messages is null
+
+                #console.log data
+                message = JSON.parse(data)
+                
+                messages.push(message)
+                    
+                if expectedNumberOfMessages == 1
+                    messages = null
+                    cb(message)
+                else
+                    if(expectedNumberOfMessages == messages.length)
+                        messagesReceived = messages
+                        messages = null
+                        cb(messagesReceived)
 
     connect = (cb)->
         
