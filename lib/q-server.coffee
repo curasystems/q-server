@@ -86,7 +86,7 @@ class QServer
                 subscriber.write(JSON.stringify(listEvent))
 
     _configureRoutes: (app)->
-
+        
         app.get '/packages/:name/:version/download', (req,res)=>@_downloadPackage(req,res)
         app.get '/packages/:name', (req,res)=>@_findPackageVersions(req,res)
         app.get '/packages', (req,res)=>@_getPackages(req,res)
@@ -121,6 +121,7 @@ class QServer
                 res.json(200,versions)
 
     _getPackages: (req,res)->
+        console.log req.url
         if req.query.mode == 'raw'
             @store.listRaw (err,list)->
                 if err
@@ -137,7 +138,6 @@ class QServer
 
     _postPatch: (req,res)->        
 
-        
         attachments = @_getAttachments(req)
         return res.send(400) if attachments.length != 1
         
@@ -177,7 +177,7 @@ class QServer
 
         for p in packages
             @_verifyPackage p, (err,result)=>
-                processingErrors.push(err)
+                processingErrors.push(err) if err
                 validationResults.push(result)
 
                 if validationResults.length == packages.length

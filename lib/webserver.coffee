@@ -5,7 +5,14 @@ module.exports.create = (options)->
       #windowSize: 1024 # Server's window size
       #debug: yes
 
-    # *** CREATE HTTP/S/SPDY SERVER
+    # *** CREATE/CONFIGURE EXPRESS SERVER
+    express = require('express')
+
+    app = express()
+    app.use(express.bodyParser())
+    app.use(express.methodOverride())
+
+    # *** CREATE HTTP/S/SPDY SERVER and configure with express
 
     #  SPDY
     server = require('spdy').createServer(options, app)
@@ -21,14 +28,6 @@ module.exports.create = (options)->
     # CONFIGURE WITH SOCK-JS (dont log to console.log)
     sockjs  = require('sockjs').createServer(options.sockjs)
     sockjs.installHandlers( server , {prefix:'/live/packages'} )
-
-    # *** CREATE/CONFIGURE EXPRESS SERVER
-    express = require('express')
-
-    app = express()
-    app.use(express.bodyParser())
-    app.use(express.methodOverride())
-
 
     # *** CONFIGURE THE Q Server with express and sockets
     qServer = require('./q-server')

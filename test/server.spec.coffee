@@ -42,6 +42,14 @@ describe 'Q Server', ->
 
             request = supertest(app)
 
+        it 'can get an empty list of packages as json', (done)->
+            request.get('/packages')
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end (err,res)->
+                    res.body.should.be.empty
+                    done(err)
+
         describe 'uploading packages', ->
 
             it 'accepts new packages by uploading them', (done)->
