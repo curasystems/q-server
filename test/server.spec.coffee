@@ -12,6 +12,9 @@ describe 'Q Server', ->
     s = null
     TEST_OPTIONS=
         path: "#{__dirname}/store"
+        verifyRequiresSignature: true
+        users:
+            'user_a': fs.readFileSync("#{__dirname}/keys/user_a.pub", encoding:'utf8')
 
     beforeEach ()->
         wrench.rmdirSyncRecursive TEST_OPTIONS.path if fs.existsSync TEST_OPTIONS.path
@@ -54,6 +57,11 @@ describe 'Q Server', ->
                 request.post('/packages')
                     .attach('0.1.0.pkg', "#{__dirname}/packages/manipulated.zip")
                     .expect(400,done)
+   
+            it 'invalid package signatures are not accepted', (done)->
+                request.post('/packages')
+                    .attach('0.1.0.pkg', "#{__dirname}/packages/manipulatedSignature.zip")
+                    .expect(400,done)
 
         describe 'uploading packages as diffs', ->
 
@@ -73,9 +81,6 @@ describe 'Q Server', ->
                 request.post('/packages/my-package/0.1.0/patch')
                     .attach('valid-0.1.0-0.2.0.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
                     .expect(404,done)
-
-            
-
 
         describe 'once packages are uploaded', ->
 
@@ -98,7 +103,7 @@ describe 'Q Server', ->
                     .expect(200)
                     .end (err,res)->
                         expect(err).to.be.null
-                        res.body.should.contain('b74ed98ef279f61233bad0d4b34c1488f8525f27') 
+                        res.body.should.contain('898a0ad816c517f8c888fa00c1a84dce73fed656') 
                         done()
 
             it 'is possible to list all versions of a specific package', (done)->

@@ -1,12 +1,13 @@
-Q = require('q')
+Q = require('quartermaster')
 fs = require('fs')
 qStore = require('q-fs-store')
 
+_ = require('underscore')
 async = require('async')
 path = require('path')
-_ = require('underscore')
 mkdirp = require('mkdirp')
 semver = require('semver')
+moment = require('moment')
 
 bs = require('bsdiff-bin')
 temp = require('temp')
@@ -27,7 +28,13 @@ class QServer
 
     constructor: (@options)->
         @store = new qStore(path:@options.path)
-        @q = new Q(store:@store)
+
+        q_options = {}
+        q_options.verifyRequiresSignature = @options.verifyRequiresSignature
+        q_options.keys = @options.users
+        q_options.store = @store
+
+        @q = new Q( q_options )
         @subscribers = []
 
     listen: (app, io)->
@@ -170,7 +177,7 @@ class QServer
 
         for p in packages
             @_verifyPackage p, (err,result)=>
-                processingErrors.push(err) if err
+                processingErrors.push(err)
                 validationResults.push(result)
 
                 if validationResults.length == packages.length
@@ -178,8 +185,8 @@ class QServer
                     
     _afterAllPackagesVerified: (req, res, packages, validationResults)->
         
-        allPackagesValid = _.every validationResults, (r)->r?.valid
-        return res.send(400) if not allPackagesValid
+        allPackagesVerified = _.every validationResults, (r)->r?.verified
+        return res.send(400) if not allPackagesVerified
             
         async.eachSeries packages, (p,cb)=>
                 @_importPackage(p,cb)
@@ -202,6 +209,9 @@ class QServer
                 name:listing.name
                 version:listing.version
                 description:listing.description
+                signedBy:listing.signedBy
+                signature:listing.signature
+                imported: moment.utc().format()
 
             @store.writePackage packageInfo, (err,storageStream)=>
                 fs.createReadStream(packagePath).pipe(storageStream)

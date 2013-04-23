@@ -11,17 +11,21 @@ describe 'Q Server Realtime', ->
     
     listener = null
     request = null
+    server = null
 
     Q_OPTIONS =
         path: "#{__dirname}/store"
-
+        verifyRequiresSignature: false
+        
     SOCKJS_OPTIONS = 
         log: (severity,message)->console.log(message) if severity is 'error'
-
 
     beforeEach ()->
         wrench.rmdirSyncRecursive Q_OPTIONS.path if fs.existsSync Q_OPTIONS.path
 
+        server = createWebServer()
+        listener = server.listen()
+        
     describe 'on startup', ->
 
         it 'opens a sockjs server to connect to', (done)->
@@ -97,9 +101,10 @@ describe 'Q Server Realtime', ->
 
     uploadPackageWithName = (name, cb) ->
         request.post('/packages')
-            .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/#{name}.zip")
+            .attach('package.pkg', "#{__dirname}/packages/#{name}.zip")
             .expect(202)
-            .end ()->cb() if cb
+            .end (err)->
+                cb() if cb
 
     waitForMessages = (expectedNumberOfMessages,cb)->
         messages = []
@@ -123,10 +128,6 @@ describe 'Q Server Realtime', ->
 
     connect = (cb)->
         
-        connections = []
-        server = createWebServer()
-        listener = server.listen()
-
         return socketClient.create("https://127.0.0.1:#{server.address().port}/live/packages")
 
     createWebServer = ()->

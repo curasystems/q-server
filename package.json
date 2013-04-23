@@ -8,7 +8,9 @@
     "doc": "node test.js --reporter doc",
     "testing": "supervisor -e js,coffee -n exit -- test.js --reporter spec"
   },
-  "bin": { "q-server":"bin/q-server" },
+  "bin": {
+    "q-server": "bin/q-server"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/curasystems/q-server.git"
@@ -30,7 +32,10 @@
     "semver": "~1.1.4",
     "sockjs": "~0.3.5",
     "temp": "~0.5.0",
-    "bsdiff-bin": "~0.1.0"
+    "bsdiff-bin": "~0.1.0",
+    "quartermaster": "git://github.com/curasystems/q.git",
+    "q-fs-store": "git://github.com/curasystems/q-fs-store.git",
+    "moment": "~2.0.0"
   },
   "devDependencies": {
     "sinon": "~1.6.0",
