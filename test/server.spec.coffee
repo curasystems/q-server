@@ -80,7 +80,6 @@ describe 'Q Server', ->
                     .end (err,req)->
                         done(err) if err
 
-                        #post patch
                         request.post('/packages/my-package/0.1.0/patch')
                             .attach('valid-0.1.0-0.2.0.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
                             .expect(200,done)

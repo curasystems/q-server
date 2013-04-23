@@ -76,7 +76,10 @@ class QServer
 
     _sendPackageListToSubscriber: (subscriber)->
 
-        @store.listAll (err,list)->
+        if @options.verbose 
+            console.log "Sending package list to subscriber", subscriber
+
+        @store.listAll (err,list)=>
             if err
                 #res.send(500,err)
             else
@@ -85,13 +88,19 @@ class QServer
                     packages: list
                 subscriber.write(JSON.stringify(listEvent))
 
+
     _configureRoutes: (app)->
         
-        app.get '/packages/:name/:version/download', (req,res)=>@_downloadPackage(req,res)
-        app.get '/packages/:name', (req,res)=>@_findPackageVersions(req,res)
-        app.get '/packages', (req,res)=>@_getPackages(req,res)
-        app.post '/packages', (req,res)=>@_postPackages(req,res)
-        app.post '/packages/:name/:version/patch', (req,res)=>@_postPatch(req,res)
+        app.get '/packages/:name/:version/download', (req,res)=>
+            @_downloadPackage(req,res)
+        app.get '/packages/:name', (req,res)=>
+            @_findPackageVersions(req,res)
+        app.get '/packages', (req,res)=>
+            @_getPackages(req,res)
+        app.post '/packages', (req,res)=>
+            @_postPackages(req,res)
+        app.post '/packages/:name/:version/patch', (req,res)=>
+            @_postPatch(req,res)
 
     _downloadPackage: (req,res)->
         if not req.params.name
@@ -168,6 +177,9 @@ class QServer
 
         packages = (a.path for a in attachments)
 
+        if @options.verbose 
+            console.log "package import requested", req
+
         @_importPackages(packages,req,res)
 
     _importPackages: (packages,req,res)->
@@ -216,6 +228,9 @@ class QServer
             @store.writePackage packageInfo, (err,storageStream)=>
                 fs.createReadStream(packagePath).pipe(storageStream)
                 storageStream.on 'close', ->
+                    if @options.verbose 
+                        console.log "imported package", packageInfo
+
                     callback(null)
 
     _getStoragePathForPackage: (listing)->

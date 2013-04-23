@@ -25,6 +25,7 @@ options =
       q: Q_OPTIONS
       sockjs: SOCKJS_OPTIONS
       users: loadUsersSync()
+      verbose: true
 
 w = webserver.create(options)
 w.server.listen(8963);
