@@ -37,6 +37,11 @@ class QServer
         @q = new Q( q_options )
         @subscribers = []
 
+        if @options.verbose
+            console.log "allowed publishing users:"
+            for own user of @options.users
+                console.log ' > ', user
+
     listen: (app, io)->
         if not app.get
             throw new InvalidAppError('must be able to register get route on app')
@@ -130,7 +135,7 @@ class QServer
                 res.json(200,versions)
 
     _getPackages: (req,res)->
-        console.log req.url
+       
         if req.query.mode == 'raw'
             @store.listRaw (err,list)->
                 if err
@@ -178,26 +183,32 @@ class QServer
         packages = (a.path for a in attachments)
 
         if @options.verbose 
-            console.log "package import requested", req
+            console.log "package import requested..."
 
         @_importPackages(packages,req,res)
 
     _importPackages: (packages,req,res)->
 
         processingErrors = []
-        validationResults = []
+        verificationResults = []
 
         for p in packages
             @_verifyPackage p, (err,result)=>
                 processingErrors.push(err) if err
-                validationResults.push(result)
+                verificationResults.push(result)
 
-                if validationResults.length == packages.length
-                    @_afterAllPackagesVerified(req,res,packages,validationResults)
+                if verificationResults.length == packages.length
+                    @_afterAllPackagesVerified(req,res,packages,verificationResults)
                     
-    _afterAllPackagesVerified: (req, res, packages, validationResults)->
+    _afterAllPackagesVerified: (req, res, packages, verificationResults)->
         
-        allPackagesVerified = _.every validationResults, (r)->r?.verified
+        for r in verificationResults
+            console.log "VR", r.verified
+            console.log(r) if not r.verified
+            for f in r.files when not f.verified
+                console.log "invalid ",f
+
+        allPackagesVerified = _.every verificationResults, (r)->r.verified
         return res.send(400) if not allPackagesVerified
             
         async.eachSeries packages, (p,cb)=>
@@ -227,7 +238,7 @@ class QServer
 
             @store.writePackage packageInfo, (err,storageStream)=>
                 fs.createReadStream(packagePath).pipe(storageStream)
-                storageStream.on 'close', ->
+                storageStream.on 'close', =>
                     if @options.verbose 
                         console.log "imported package", packageInfo
 
