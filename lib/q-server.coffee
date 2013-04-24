@@ -203,10 +203,10 @@ class QServer
     _afterAllPackagesVerified: (req, res, packages, verificationResults)->
         
         for r in verificationResults
-            console.log "VR", r.verified
-            console.log(r) if not r.verified
             for f in r.files when not f.verified
                 console.log "invalid ",f
+            for err in r.errors 
+                console.log "error ", err
 
         allPackagesVerified = _.every verificationResults, (r)->r.verified
         return res.send(400) if not allPackagesVerified
