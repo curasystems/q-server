@@ -81,7 +81,7 @@ describe 'Q Server', ->
                         done(err) if err
 
                         request.post('/packages/my-package/0.1.0/patch')
-                            .attach('valid-0.1.0-0.2.0.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
+                            .attach('test.patch', "#{__dirname}/packages/diff-0.1.0-0.2.0.patch")
                             .expect(200,done)
 
             it 'returns 404 if source package does not exist ', (done)->
@@ -92,8 +92,10 @@ describe 'Q Server', ->
         describe 'once packages are uploaded', ->
 
             beforeEach (done)->
+
                 request.post('/packages')
-                    .attach('b74ed98ef279f61233bad0d4b34c1488f8525f27.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
+                    .attach('first.pkg', "#{__dirname}/packages/valid-0.1.0.zip")
+                    .attach('second.pkg', "#{__dirname}/packages/valid-0.2.0.zip")
                     .expect(202,done)
 
             it 'can get list of packages as json', (done)->
@@ -102,6 +104,7 @@ describe 'Q Server', ->
                     .expect(200)
                     .end (err,res)->
                         res.body['my-package'][0].should.deep.equal( name:'my-package',version:'0.1.0')
+                        res.body['my-package'][1].should.deep.equal( name:'my-package',version:'0.2.0')
                         done(err)
 
             it 'is possible to list all package uids again', (done)->
@@ -120,6 +123,7 @@ describe 'Q Server', ->
                     .end (err,res)->
                         expect(err).to.be.null
                         res.body.should.contain('0.1.0')
+                        res.body.should.contain('0.2.0')
                         done(err)
 
             it 'is possible to list all versions of a specific package', (done)->
@@ -130,11 +134,21 @@ describe 'Q Server', ->
                 request.get('/packages/my-package?version=~0.1')
                     .expect(200)
                     .end (err,res)->
-                        res.body.should.contain('0.1.0')
+                        res.body.should.contain '0.1.0'
                         done(err)
 
+            it 'can return package info for the highest version', (done)->
+                request.get('/packages/my-package/latest')
+                    .expect(200)
+                    .end (err,res)->
+                        res.body.uid.should.equal 'a74eda650a0d01c47211367f8af0885120ce1a3d'
+                        res.body.name.should.equal 'my-package'
+                        res.body.version.should.equal '0.2.0'
+                        done(err)
+
+
             it 'returns 404 when no matching for a range is found', (done)->
-                request.get('/packages/my-package?version=>0.1.0')
+                request.get('/packages/my-package?version=>0.2.0')
                     .expect(404,done)
 
             it 'is possible download a package by name and exact version', (done)->

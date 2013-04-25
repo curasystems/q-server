@@ -11,11 +11,8 @@ main = ()->
       users: loadUsersSync()
       verbose: true
 
-
-
   SOCKJS_OPTIONS = 
       log: (severity,message)->console.log(message) if severity is 'error'
-
 
   options = 
         key: fs.readFileSync( home + '/key.pem')
@@ -27,7 +24,6 @@ main = ()->
   w.server.listen(8963);
 
   console.log "Listening on #{w.server.address().address}:#{w.server.address().port}"
-
 
 loadUsersSync = ()->
   userKeys = {}

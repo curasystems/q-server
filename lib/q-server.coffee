@@ -98,14 +98,16 @@ class QServer
         
         app.get '/packages/:name/:version/download', (req,res)=>
             @_downloadPackage(req,res)
+        app.get '/packages/:name/:version', (req,res)=>
+            @_getPackage(req,res)
         app.get '/packages/:name', (req,res)=>
             @_findPackageVersions(req,res)
         app.get '/packages', (req,res)=>
             @_getPackages(req,res)
-        app.post '/packages', (req,res)=>
-            @_postPackages(req,res)
         app.post '/packages/:name/:version/patch', (req,res)=>
             @_postPatch(req,res)
+        app.post '/packages', (req,res)=>
+            @_postPackages(req,res)
 
     _downloadPackage: (req,res)->
         if not req.params.name
@@ -124,15 +126,40 @@ class QServer
 
 
     _findPackageVersions: (req,res)->
+
         filter = req.query.version ? '>=0'
         
         @store.findMatching req.params.name, filter, (err,versions)->
+
             if err
-                res.send(500,err)
-            else if versions.length == 0
-                res.send(404)
+                return res.send(500,err)
+            else if not versions or versions.length == 0
+                return res.send(404)
+
+            res.json(200,versions)
+
+    _getPackage: (req, res)->
+        packageName = req.params.name
+        version = req.params.version
+
+        if version == 'latest'
+            @store.listVersions packageName, (err,versions)=>
+                version = @store.highestVersionOf(versions)
+                @_getPackageInfo packageName, version, req, res
+        else
+            if not semver.valid(version)
+                res.send(400)
             else
-                res.json(200,versions)
+                @_getPackageInfo packageName, version, req, res
+
+    _getPackageInfo: (name, version, req, res)=>
+        @store.getInfo name, version, (err,info)=>
+            if err
+                return res.send(500)
+            if not info 
+                return res.send(404)
+
+            return res.json(info)
 
     _getPackages: (req,res)->
        
