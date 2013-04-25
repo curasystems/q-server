@@ -137,6 +137,15 @@ describe 'Q Server', ->
                         res.body.should.contain '0.1.0'
                         done(err)
 
+            it 'can return package info for any version', (done)->
+                request.get('/packages/my-package/0.1.0')
+                    .expect(200)
+                    .end (err,res)->
+                        res.body.uid.should.equal 'a74eda650a0d01c47211367f8af0885120ce1a3d'
+                        res.body.name.should.equal 'my-package'
+                        res.body.version.should.equal '0.2.0'
+                        done(err)
+
             it 'can return package info for the highest version', (done)->
                 request.get('/packages/my-package/latest')
                     .expect(200)
