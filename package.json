@@ -1,6 +1,6 @@
 {
   "name": "q-server",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Binary Package Manager Server",
   "main": "index.js",
   "scripts": {
@@ -35,20 +35,21 @@
     "bsdiff-bin": "~0.1.0",
     "quartermaster": "git://github.com/curasystems/q.git",
     "q-fs-store": "git://github.com/curasystems/q-fs-store.git",
-    "moment": "~2.0.0"
+    "moment": "~2.0.0",
+    "express": "~3.2.0",
+    "spdy": "~1.8.2",
+    "humanize": "0.0.7",
+    "mkdirp": "~0.3.5"
+    "spdy": "~1.8.1",
   },
   "devDependencies": {
     "sinon": "~1.6.0",
     "sinon-chai": "~2.3.1",
     "chai": "~1.5.0",
     "mocha": "~1.8.2",
-    "async": "~0.2.6",
     "growl": "~1.7.0",
     "supertest": "~0.6.0",
-    "express": "~3.2.0",
     "wrench": "~1.4.4",
-    "mkdirp": "~0.3.5",
-    "spdy": "~1.8.1",
     "sockjs-client": "~0.1.3"
   },
   "author": "Matthias Goetzke",
