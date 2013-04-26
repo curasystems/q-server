@@ -1,4 +1,4 @@
-q = require('../lib/q-server')
+QServer = require('../lib/q-server')
 
 fs = require('fs')
 supertest = require('supertest')
@@ -18,7 +18,7 @@ describe 'Q Server', ->
 
     beforeEach ()->
         wrench.rmdirSyncRecursive TEST_OPTIONS.path if fs.existsSync TEST_OPTIONS.path
-        s = q(TEST_OPTIONS)
+        s = QServer(TEST_OPTIONS)
         
     it 'can be built', ->
         expect(s).to.not.be.undefined
@@ -26,7 +26,7 @@ describe 'Q Server', ->
 
     it 'can only hook up when the application allows to register routes', ->
         app = {}
-        expect( ()->s.listen(app) ).to.throw( q.InvalidAppError, /route/ )
+        expect( ()->s.listen(app) ).to.throw( QServer.InvalidAppError, /route/ )
 
     describe 'with express', ->
 
@@ -155,7 +155,6 @@ describe 'Q Server', ->
                         res.body.version.should.equal '0.2.0'
                         done(err)
 
-
             it 'returns 404 when no matching for a range is found', (done)->
                 request.get('/packages/my-package?version=>0.2.0')
                     .expect(404,done)
@@ -163,8 +162,16 @@ describe 'Q Server', ->
             it 'is possible download a package by name and exact version', (done)->
                 request.get('/packages/my-package/0.1.0/download')
                     .expect('Content-Type', 'application/octet-stream')
+                    .expect('Content-Disposition', 'filename=my-package@0.1.0.pkg')
                     .expect(200)
                     .end (err,res)->
                         done(err)
 
-            it 'is '
+            it 'is possible to download a patch relative to a specific package', (done)->
+
+                request.get('/packages/my-package/0.2.0/download?patchFrom=898a0ad816c517f8c888fa00c1a84dce73fed656')
+                    .expect('Content-Type', 'application/octet-stream')
+                    .expect('Content-Disposition', 'filename=my-package@0.2.0.898a0ad816c517f8c888fa00c1a84dce73fed656.patch')
+                    .expect(200)
+                    .end (err,res)->
+                        done(err)

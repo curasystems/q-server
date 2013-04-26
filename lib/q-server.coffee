@@ -115,15 +115,42 @@ class QServer
         else if not semver.valid(req.params.version)
             res.send(400, 'version must be valid fully specified semver')
         else
+        
             packageIdentifier = req.params.name+'@'+req.params.version
-            @store.readPackage packageIdentifier, (err,packageStream)->
-                if err
-                    res.send(404)
-                else
-                    res.type('application/octet-stream')
-                    res.setHeader('Content-Disposition', "filename=#{packageIdentifier}.pkg")
-                    packageStream.pipe(res)
 
+            @store.getPackageStoragePath packageIdentifier, (err, packagePath)=>
+                if err or not fs.existsSync(packagePath)
+                    return res.send(404)
+            
+                patchFrom = req.query?.patchFrom
+
+                if patchFrom
+                    @_returnPatch(packageIdentifier,packagePath,patchFrom,res)
+                else
+                    @_returnPackage(packageIdentifier,packagePath,res)
+    
+    _returnPatch: (identifier, packagePath, patchFromUid, res)->
+        @store.getPackageStoragePath patchFromUid, (err, patchFromPackagePath)=>
+            if err or not fs.existsSync(patchFromPackagePath)
+                return @_returnPackage(identifier, packagePath, res) 
+
+            patchPath = temp.path(suffix:'.patch')
+
+            bs.diff patchFromPackagePath, packagePath, patchPath, (err)=>
+                return @_returnPackage(identifier, packagePath, res) if err
+
+                res.type('application/octet-stream')
+                res.setHeader('Content-Disposition', "filename=#{identifier}.#{patchFromUid}.patch")                
+                packageStream = fs.createReadStream(patchPath)
+                packageStream.pipe(res)
+
+    _returnPackage: (identifier, packagePath, res)->
+
+        res.type('application/octet-stream')
+        res.setHeader('Content-Disposition', "filename=#{identifier}.pkg")
+        
+        packageStream = fs.createReadStream(packagePath)
+        packageStream.pipe(res)
 
     _findPackageVersions: (req,res)->
 
