@@ -21,9 +21,8 @@ main = ()->
         sockjs: SOCKJS_OPTIONS
         
   w = webserver.create(options)
-  w.server.listen(8963);
-
-  console.log "Listening on #{w.server.address().address}:#{w.server.address().port}"
+  w.server.listen 8963, ->
+    console.log "Listening on #{w.server.address().address}:#{w.server.address().port}"
 
 loadUsersSync = ()->
   userKeys = {}
