@@ -96,6 +96,8 @@ class QServer
 
     _configureRoutes: (app)->
         
+        app.get '/packages/:name/latest/download', (req,res)=>
+            @_downloadPackage(req,res)
         app.get '/packages/:name/:version/download', (req,res)=>
             @_downloadPackage(req,res)
         app.get '/packages/:name/:version', (req,res)=>
@@ -112,22 +114,30 @@ class QServer
     _downloadPackage: (req,res)->
         if not req.params.name
             res.send(400, 'module name required')
-        else if not semver.valid(req.params.version)
-            res.send(400, 'version must be valid fully specified semver')
         else
+            packageIdentifier = req.params.name    
+            patchFrom = req.query?.patchFrom
+
+            if req.params.version
+              packageIdentifier += '@'+req.params.version
+              @_initiateDownload(packageIdentifier,patchFrom, res)
+            else
+              @store.listVersions packageIdentifier, (err,versions)=>
+                version = @store.highestVersionOf(versions)
+                packageIdentifier += '@'+version
+                @_initiateDownload(packageIdentifier,patchFrom,res)
         
-            packageIdentifier = req.params.name+'@'+req.params.version
 
-            @store.getPackageStoragePath packageIdentifier, (err, packagePath)=>
-                if err or not fs.existsSync(packagePath)
-                    return res.send(404)
-            
-                patchFrom = req.query?.patchFrom
+    _initiateDownload: (packageIdentifier, patchFrom, res)->
 
-                if patchFrom
-                    @_returnPatch(packageIdentifier,packagePath,patchFrom,res)
-                else
-                    @_returnPackage(packageIdentifier,packagePath,res)
+      @store.getPackageStoragePath packageIdentifier, (err, packagePath)=>
+          if err or not fs.existsSync(packagePath)
+              return res.send(404)
+
+          if patchFrom
+              @_returnPatch(packageIdentifier,packagePath,patchFrom,res)
+          else
+              @_returnPackage(packageIdentifier,packagePath,res)
     
     _returnPatch: (identifier, packagePath, patchFromUid, res)->
         @store.getPackageStoragePath patchFromUid, (err, patchFromPackagePath)=>
