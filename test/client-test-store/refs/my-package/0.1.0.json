@@ -1,0 +1,9 @@
+{
+ "uid": "898a0ad816c517f8c888fa00c1a84dce73fed656",
+ "name": "my-package",
+ "version": "0.1.0",
+ "signedBy": "your_email@example.com",
+ "signature": "BcyvPwf5TVGY6gJLOq1Q99Xg+zRz8RtoOdhhvv7egNdLXApfP3RDuyHIKW2MwSz4aDSR87z+Dq3MgGe48e+X2mnwt4OvudDOKXEUdTlOtCjx1gvEdWAujazC8OiOhVijsvoQXAqG1J4O3RRBT9IJBx+iEsQ/LNdiCXroE3KnoDhO/0lYXLMxXKebHGVQRyGUz1NmgcVEXbe9pXhdAY/6UcoO0M7L7UDoKbhap2E7dDoHHGCF37+SUiEC06Mjn0J5NUfpHnv4rJL4UP3WMI20wIhxTx6I9yFyG+BsTGNlWgvwp/OK7E59xPu0+f3KrRC2K+7JpZUF4KePQpMcqouh4w==",
+ "imported": "2013-12-19T12:32:44+00:00",
+ "path": "89\\898a0ad816c517f8c888fa00c1a84dce73fed656.pkg"
+}
