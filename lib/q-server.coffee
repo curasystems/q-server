@@ -149,18 +149,20 @@ class QServer
             bs.diff patchFromPackagePath, packagePath, patchPath, (err)=>
                 return @_returnPackage(identifier, packagePath, res) if err
 
-                res.type('application/octet-stream')
+                #res.type('application/octet-stream')
                 res.setHeader('Content-Disposition', "filename=#{identifier}.#{patchFromUid}.patch")                
-                packageStream = fs.createReadStream(patchPath)
-                packageStream.pipe(res)
+                res.sendFile(patchPath)
+                #packageStream = fs.createReadStream(patchPath)
+                #packageStream.pipe(res)
 
     _returnPackage: (identifier, packagePath, res)->
 
-        res.type('application/octet-stream')
+        #res.type('application/octet-stream')
         res.setHeader('Content-Disposition', "filename=#{identifier}.pkg")
+        res.sendFile(packagePath)
         
-        packageStream = fs.createReadStream(packagePath)
-        packageStream.pipe(res)
+        #packageStream = fs.createReadStream(packagePath)
+        #packageStream.pipe(res)
 
     _findPackageVersions: (req,res)->
 
