@@ -151,7 +151,7 @@ class QServer
 
                 #res.type('application/octet-stream')
                 res.setHeader('Content-Disposition', "filename=#{identifier}.#{patchFromUid}.patch")                
-                res.sendFile(patchPath)
+                res.sendfile(patchPath)
                 #packageStream = fs.createReadStream(patchPath)
                 #packageStream.pipe(res)
 
@@ -159,7 +159,7 @@ class QServer
 
         #res.type('application/octet-stream')
         res.setHeader('Content-Disposition', "filename=#{identifier}.pkg")
-        res.sendFile(packagePath)
+        res.sendfile(packagePath)
         
         #packageStream = fs.createReadStream(packagePath)
         #packageStream.pipe(res)
