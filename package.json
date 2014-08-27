@@ -11,6 +11,9 @@
   "bin": {
     "q-server": "bin/q-server"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/curasystems/q-server.git"
