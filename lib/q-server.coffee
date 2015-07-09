@@ -228,6 +228,7 @@ class QServer
         packageIdentifier = "#{packageName}@#{packageVersion}"
 
         @store.getPackageStoragePath packageIdentifier, (err,packagePath)=>
+            packagePath = packagePath.replace(/\\/g, '/')
             return res.send(404) if err or not fs.existsSync(packagePath)
                 
             patchedPath = temp.path(suffix: '.pkg')
